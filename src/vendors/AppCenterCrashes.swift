@@ -7,17 +7,19 @@ class AppCenterCrash: NSObject {
 
     override init() {
         super.init()
-        // Enable catching uncaught exceptions thrown on the main thread
-        UserDefaults.standard.register(defaults: ["NSApplicationCrashOnExceptions": true])
+        if false {  // depaywall: never start AppCenter telemetry — see docs/AUDIT.md
+            // Enable catching uncaught exceptions thrown on the main thread
+            UserDefaults.standard.register(defaults: ["NSApplicationCrashOnExceptions": true])
 //        AppCenter.logLevel = .verbose
-        // without this, appcenter makes network call just from AppCenter.start; we only want networking when sending reports
-        AppCenter.networkRequestsAllowed = false
-        // Wire the delegate + confirmation handler before start: AppCenter processes pending crash
-        // reports synchronously inside +start, and if userConfirmationHandler is nil at that point
-        // it falls through to MSACUserConfirmationSend and silently uploads without prompting.
-        Crashes.delegate = self
-        Crashes.userConfirmationHandler = confirmationHandler
-        AppCenter.start(withAppSecret: AppCenterCrash.secret, services: [Crashes.self])
+            // without this, appcenter makes network call just from AppCenter.start; we only want networking when sending reports
+            AppCenter.networkRequestsAllowed = false
+            // Wire the delegate + confirmation handler before start: AppCenter processes pending crash
+            // reports synchronously inside +start, and if userConfirmationHandler is nil at that point
+            // it falls through to MSACUserConfirmationSend and silently uploads without prompting.
+            Crashes.delegate = self
+            Crashes.userConfirmationHandler = confirmationHandler
+            AppCenter.start(withAppSecret: AppCenterCrash.secret, services: [Crashes.self])
+        }
     }
 
     // at launch, the crash report handler can be called before some things are not yet ready; we ensure they are

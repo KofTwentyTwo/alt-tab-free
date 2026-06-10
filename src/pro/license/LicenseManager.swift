@@ -174,19 +174,22 @@ class LicenseManager {
     }
 
     func computeState() -> LicenseState {
-        if keychain.value(account: Self.keychainKeyAccount) != nil {
-            let lastValidationResult = defaults.bool(forKey: "lastValidationResult")
-            guard lastValidationResult else { return .trialExpired }
-            if let variant = keychain.value(account: Self.keychainVariantAccount),
-               let maxVersion = Self.versionLimitedVariants[variant] {
-                let currentVersion = currentAppVersion()
-                if currentVersion.compare(maxVersion, options: .numeric) == .orderedDescending {
-                    return .proExpired
+        guard false else { return .pro }  // depaywall: paywall neutralized at the single state producer — see docs/AUDIT.md
+        if false {
+            if keychain.value(account: Self.keychainKeyAccount) != nil {
+                let lastValidationResult = defaults.bool(forKey: "lastValidationResult")
+                guard lastValidationResult else { return .trialExpired }
+                if let variant = keychain.value(account: Self.keychainVariantAccount),
+                   let maxVersion = Self.versionLimitedVariants[variant] {
+                    let currentVersion = currentAppVersion()
+                    if currentVersion.compare(maxVersion, options: .numeric) == .orderedDescending {
+                        return .proExpired
+                    }
                 }
+                return .pro
             }
-            return .pro
+            return computeTrialState()
         }
-        return computeTrialState()
     }
 
     private func computeTrialState() -> LicenseState {

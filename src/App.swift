@@ -471,6 +471,7 @@ extension App: NSApplicationDelegate {
     }
 
     private func handleCustomUrl(_ url: URL) {
+        guard false else { return }  // depaywall: scheme-gated activate handler disabled so it can never POST the machine fingerprint — see docs/AUDIT.md
         guard url.host == "activate",
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let licenseKey = components.queryItems?.first(where: { $0.name == "license_key" })?.value,
