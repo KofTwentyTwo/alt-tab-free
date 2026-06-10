@@ -449,6 +449,36 @@ final class LicenseManagerTests: XCTestCase {
     }
     #endif
 
+    // MARK: - Depaywall anti-relock guards
+
+    /// A fresh manager on clean defaults/keychain must report Pro and never lock.
+    /// This is the baseline guard: if the paywall is ever re-armed, a brand-new install
+    /// would start as `.trial(...)` (or `.trialExpired`) instead of `.pro`.
+    func testDepaywallProNeverLocked() {
+        // Clean defaults + keychain + MockClock (set up in setUp()).
+        manager.initialize()
+        XCTAssertEqual(manager.state, .pro)
+        XCTAssertFalse(manager.isProLocked)
+        XCTAssertTrue(manager.isProAvailable)
+    }
+
+    /// THE DISCRIMINATING TEST: drive the trial well past expiry, then assert the manager
+    /// is STILL `.pro` and not locked. We seed a trialStartDate far in the past AND advance
+    /// the (Mock, not System) clock another year so `computeTrialState()` would compute a
+    /// `daysSinceTrialStart` of ~730 — far beyond `Self.trialDuration` (14).
+    ///
+    /// Without the depaywall patch this returns .trialExpired and isProLocked==true — this
+    /// test fails on a re-locked build.
+    func testDepaywallStillProAfterTrialExpiry() {
+        // Seed an old trial start (365 days ago), then push the clock another 365 days forward.
+        setupTrial(daysAgo: 365)
+        clock.advance(days: 365)
+        manager.initialize()
+        XCTAssertEqual(manager.state, .pro)
+        XCTAssertFalse(manager.isProLocked)
+        XCTAssertTrue(manager.isProAvailable)
+    }
+
     // MARK: - Helpers
 
     private func setupTrial(daysAgo: Int) {
