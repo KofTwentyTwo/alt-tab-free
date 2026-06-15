@@ -79,6 +79,33 @@ jobs:
           if git -c grep.lineNumber=false grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- . ':(exclude)docs/'; then
             echo "UNRESOLVED CONFLICT MARKERS present — resolve before merge/release"; exit 1
           fi
+      # alt-tab-free [depaywall]: release-readiness gate (PLAN §3.3/§4.3 owner-secret checklist).
+      # The fork ships unsigned/ad-hoc until the OWNER provisions the Apple Developer ID cert and the
+      # Sparkle key. We do NOT hard-fail when those secrets are absent — that would make every push
+      # RED on a fork that is correctly built but not yet signing-provisioned. Instead we compute a
+      # boolean from secret presence and SKIP the sign/notarize/appcast/release tail cleanly when it
+      # is false. The build + Guard A (run_tests.sh) still run on push, so push CI is GREEN today and
+      # the release tail FLIPS ON automatically the moment the owner adds the secrets. Secrets are not
+      # available in step-level `if:` directly, so map them to env and emit an output here.
+      - name: release-gate — are signing/notarization secrets present?
+        id: release-gate
+        env:
+          HAS_P12: ${{ secrets.APPLE_P12_CERTIFICATE != '' }}
+          HAS_APPLE_ID: ${{ secrets.APPLE_ID != '' }}
+          HAS_APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD != '' }}
+          HAS_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID != '' }}
+          HAS_SPARKLE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY != '' }}
+        run: |
+          set -euo pipefail
+          if [ "$HAS_P12" = "true" ] && [ "$HAS_APPLE_ID" = "true" ] \
+             && [ "$HAS_APPLE_PASSWORD" = "true" ] && [ "$HAS_APPLE_TEAM_ID" = "true" ] \
+             && [ "$HAS_SPARKLE_KEY" = "true" ]; then
+            echo "signing-ready=true" >> "$GITHUB_OUTPUT"
+            echo "All signing/notarization/Sparkle secrets present — release tail WILL run on push."
+          else
+            echo "signing-ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Signing/notarization/Sparkle secrets absent — release tail (codesign/notarize/appcast/semantic-release/gh-release) is SKIPPED. Build + Guard A still run. Provision APPLE_P12_CERTIFICATE / APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID / SPARKLE_ED_PRIVATE_KEY in the 'production' Environment to enable releases (PLAN §3.3/§3.4)."
+          fi
       - uses: actions/setup-node@v6
         with:
           node-version: 16 # PLAN §4.3: keep node-16; the package.json engines mismatch only warns
@@ -106,30 +133,40 @@ jobs:
         if: github.event_name == 'push'
       - run: scripts/replace_environment_variables_in_app.sh
         if: github.event_name == 'push'
+      # codesign needs APPLE_P12_CERTIFICATE — gated on signing-ready so a not-yet-provisioned fork
+      # does not RED on the missing-cert import (PLAN §3.3/§4.3).
       - run: scripts/codesign/setup_ci_master.sh
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
       # Guard A — the anti-relock unit test (appended to LicenseManagerTests.swift). Runs on both
-      # push and PR; on the push path it sits before the sign/tag steps below (PLAN §4.4).
+      # push and PR (no secrets needed); on the push path it sits before the sign/tag steps below
+      # so a relock fails BEFORE any irreversible side-effect (PLAN §4.4). This is what keeps push
+      # CI GREEN today on the signing-unprovisioned fork.
       - run: scripts/run_tests.sh
+      # build_app.sh needs no secrets (builds unsigned/ad-hoc when CODE_SIGN_IDENTITY is unset), so
+      # it runs on every push to prove the tree compiles — independent of the release gate.
       - run: scripts/build_app.sh
         if: github.event_name == 'push'
+      # --- Release tail: requires the owner's Apple Developer ID + Sparkle secrets. Skipped cleanly
+      # (NOT failed) when they are absent, so push CI stays GREEN until the owner provisions them. ---
       - run: scripts/package_and_notarize_release.sh
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
       # alt-tab-free [depaywall]: upload_symbols_to_appcenter.sh REMOVED — telemetry is off (PLAN §3.4).
       - run: scripts/update_appcast.sh
-        if: github.event_name == 'push'
-      - run: scripts/update_readme_and_website.sh
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
+      # alt-tab-free [depaywall]: update_readme_and_website.sh REMOVED — it queried the UPSTREAM
+      # lwouis/alt-tab-macos GitHub API for stars/downloads and rewrote docs/contributors.md from the
+      # UPSTREAM contributor graph (semantic mismatch for the fork) and dispatched the lwouis website.
+      # Cosmetic only; dropped per PLAN §4.0/§4.3 (alongside update_website.sh, already removed).
       - run: npx semantic-release
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
       - id: set_release_info
         run: scripts/extract_latest_changelog.sh
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
       # alt-tab-free [depaywall]: belt-and-suspenders copy of Guard B + Guard C immediately before the
       # release is created. The load-bearing copy is at the top of the job (pre-tag-push); this second
       # copy guards the gh-release object itself (PLAN §4.4).
       - name: anti-relock + anti-conflict re-check (belt-and-suspenders)
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
         run: |
           grep -q 'alt-tab-free \[depaywall\]' src/pro/license/LicenseManager.swift \
             || { echo "PAYWALL RELOCKED: depaywall marker missing from computeState()"; exit 1; }
@@ -142,7 +179,7 @@ jobs:
       # (release.config.js has no @semantic-release/github plugin, so softprops is the sole release
       # creator — PLAN §4.3). repository defaults to ${{ github.repository }} = the fork.
       - uses: softprops/action-gh-release@v3
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
         with:
           repository: ${{ github.repository }}
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -155,7 +192,7 @@ jobs:
       # prevents a closed-unmerged sync PR from silently dropping commits (PLAN §4.2). Skipped with
       # [skip ci] so it does not re-trigger the workflow.
       - name: advance .fork-sync-state to the released tag
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
         run: |
           tag="${{ steps.set_release_info.outputs.tag_name }}"
           [ -n "$tag" ] || { echo "no tag_name output — skipping .fork-sync-state advance"; exit 0; }

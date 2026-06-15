@@ -31,7 +31,14 @@ version="$(cat "$VERSION_FILE")"
 date="$(date +'%a, %d %b %Y %H:%M:%S %z')"
 minimumSystemVersion="$(awk -F ' = ' '/MACOSX_DEPLOYMENT_TARGET/ { print $2; }' < config/base.xcconfig)"
 zipName="$APP_NAME-$version.zip"
-edSignatureAndLength=$(vendor/Sparkle/bin/sign_update -s $SPARKLE_ED_PRIVATE_KEY "$XCODE_BUILD_PATH/$zipName")
+# alt-tab-free [depaywall]: the `-s <private-key>` flag is DEPRECATED and, per `sign_update --help`,
+# "no longer supported for newly generated keys" — and the fork's EdDSA keypair was newly generated
+# (EXECUTION-STATUS §3.3, 2026-06-15), so `-s` would REJECT it. Pipe the secret to the documented
+# `--ed-key-file -` (read key from stdin) form instead. Do NOT add `-p`: the default output is the
+# `sparkle:edSignature="…" length="…"` attribute pair the <enclosure> needs verbatim, whereas `-p`
+# prints only the bare signature and would break the enclosure. Reading from stdin also keeps the key
+# off the argv (process listing), unlike the old `-s $KEY` form.
+edSignatureAndLength=$(printf '%s' "$SPARKLE_ED_PRIVATE_KEY" | vendor/Sparkle/bin/sign_update --ed-key-file - "$XCODE_BUILD_PATH/$zipName")
 
 # GPL §6(d) corresponding-source pointer for object code conveyed via Sparkle auto-update.
 correspondingSource="https://github.com/$fork_repo/archive/refs/tags/v$version.tar.gz"
