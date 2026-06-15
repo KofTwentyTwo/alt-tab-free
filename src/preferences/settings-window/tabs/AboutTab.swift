@@ -5,62 +5,60 @@ class AboutTab {
         makeContentView()
     }
 
-    static func makeContentView(_ fitToContent: Bool = true, _ showFeedbackButton: Bool = true, _ centerHero: Bool = false) -> NSView {
+    static func makeContentView(columnWidth: CGFloat = 280, _ fitToContent: Bool = true) -> NSView {
         let appIcon = LightImageView()
         appIcon.translatesAutoresizingMaskIntoConstraints = false
         let appIconSize = NSSize(width: 128, height: 128)
         appIcon.updateContents(.cgImage(App.appIcon(for: appIconSize)), appIconSize)
         appIcon.fit(128, 128)
-        let appText = StackView([
+        let heroText = StackView([
             BoldLabel(App.name),
             NSTextField(wrappingLabelWithString: NSLocalizedString("Version", comment: "") + " " + App.version),
             NSTextField(wrappingLabelWithString: App.licence),
-            NSTextField(wrappingLabelWithString: NSLocalizedString("A free fork of AltTab by Louis Pontoise — GPL-3.0", comment: "Attribution to the upstream project AltTab; do not translate the product names")),
-            HyperlinkLabel(NSLocalizedString("Website", comment: ""), Endpoints.website),
-            HyperlinkLabel(NSLocalizedString("Source code", comment: ""), App.repository),
         ], .vertical)
-        appText.spacing = GridView.interPadding / 2
-        let rowToSeparate = 4
-        appText.views[rowToSeparate].topAnchor.constraint(equalTo: appText.views[rowToSeparate - 1].bottomAnchor, constant: GridView.interPadding).isActive = true
-        let appInfo = NSStackView(views: [appIcon, appText])
-        appIcon.translatesAutoresizingMaskIntoConstraints = false
-        appInfo.spacing = GridView.interPadding
-        appInfo.alignment = .centerY
-        let supportProject = makeSupportProjectButton()
-        let rows = [[appInfo], [supportProject]]
-        let grid = GridView(rows, 0)
-        if centerHero {
-            grid.cell(atColumnIndex: 0, rowIndex: 0).xPlacement = .center
-        }
-        let supportProjectCell = grid.cell(atColumnIndex: 0, rowIndex: showFeedbackButton ? 2 : 1)
-        supportProjectCell.xPlacement = .center
+        heroText.spacing = GridView.interPadding / 2
+        let hero = NSStackView(views: [appIcon, heroText])
+        hero.spacing = GridView.interPadding
+        hero.alignment = .centerY
+        hero.translatesAutoresizingMaskIntoConstraints = false
+        let body = makeBodyTextView(columnWidth)
+        let content = NSStackView(views: [hero, body])
+        content.orientation = .vertical
+        content.alignment = .leading
+        content.spacing = GridView.interPadding * 2
+        content.translatesAutoresizingMaskIntoConstraints = false
         if fitToContent {
-            grid.fit()
+            content.fit()
         }
-        return grid
+        return content
     }
 
-    static func makeSupportProjectButton() -> NSButton {
-        let button = makeButtonWithIcon(NSLocalizedString("Support this project", comment: ""), App.supportProjectAction, "heart.fill", .red, App.self)
-        styleSupportProjectButton(button)
-        return button
-    }
-
-    private static func styleSupportProjectButton(_ button: NSButton) {
-        button.bezelStyle = .rounded
-        button.translatesAutoresizingMaskIntoConstraints = false
-    }
-
-    private static func makeButtonWithIcon(_ title: String, _ selector: Selector, _ symbolName: String?, _ color: NSColor? = nil, _ target: AnyObject? = nil) -> NSButton {
-        let button = NSButton(title: title, target: target, action: selector)
-        if #available(macOS 26.0, *), let symbolName {
-            button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
-            button.imagePosition = .imageLeading
-            if let color {
-                button.image = button.image?.withSymbolConfiguration(.init(paletteColors: [color]))
-            }
-        }
-        return button
+    // The KofTwentyTwo identity + upstream-attribution body. Rendered as markdown with clickable
+    // links through the same path as the Usage and Acknowledgments sections, so wrapping and layout
+    // stay robust (sizing to columnWidth) instead of relying on hand-built stretch constraints.
+    private static func makeBodyTextView(_ columnWidth: CGFloat) -> NSTextView {
+        let markdown = [
+            "## " + NSLocalizedString("A KofTwentyTwo project", comment: ""),
+            "[" + NSLocalizedString("Source code", comment: "") + "](\(App.repository)) · [KofTwentyTwo](https://github.com/KofTwentyTwo)",
+            "",
+            "## " + NSLocalizedString("Based on AltTab by Louis Pontoise", comment: "Attribution to the upstream project AltTab; do not translate the product names"),
+            String(format: NSLocalizedString("%@ is a free, de-paywalled fork. All upstream work and credit belong to Louis Pontoise and AltTab’s contributors.", comment: "%@ is the app name"), App.name),
+            "",
+            "[AltTab](https://alt-tab.app) · [" + NSLocalizedString("Original source", comment: "") + "](https://github.com/lwouis/alt-tab-macos) · [lwouis.com](https://lwouis.com)",
+        ].joined(separator: "\n")
+        let textView = NSTextView()
+        textView.textContainer!.widthTracksTextView = true
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.drawsBackground = false
+        textView.isSelectable = true
+        textView.isEditable = false
+        textView.enabledTextCheckingTypes = 0
+        textView.frame.size.width = columnWidth
+        textView.textStorage!.setAttributedString(Markdown.toAttributedString(markdown))
+        textView.layoutManager!.ensureLayout(for: textView.textContainer!)
+        let used = textView.layoutManager!.usedRect(for: textView.textContainer!)
+        textView.fit(used.width, used.height)
+        return textView
     }
 }
 
@@ -108,8 +106,8 @@ class AboutWindow: NSPanel {
         stack.alignment = .leading
         stack.spacing = 30
         stack.translatesAutoresizingMaskIntoConstraints = false
-        let aboutView = AboutTab.makeContentView(false, false, true)
         let columnWidth = frame.width - 2 * Self.contentPadding
+        let aboutView = AboutTab.makeContentView(columnWidth: columnWidth, false)
         usageTextView = Self.makeUsageTextView(columnWidth)
         let acknowledgmentsView = AcknowledgmentsTab.makeContentView(columnWidth: columnWidth, shouldFit: false, verticallyStacked: true)
         acknowledgmentsView.translatesAutoresizingMaskIntoConstraints = false
