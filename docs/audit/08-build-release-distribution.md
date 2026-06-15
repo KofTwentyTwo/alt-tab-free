@@ -232,7 +232,7 @@ update from the fork's own releases, and attempt to notarize/sign under the upst
 | 6 | **Sparkle private EdDSA key** | `ci_cd.yml:13`; `update_appcast.sh:9` | `$SPARKLE_ED_PRIVATE_KEY` | **C** — fork's new private key. Must match #5 or updates won't verify. |
 | 7 | **Appcast feed domain** | `config/base.xcconfig:20` (`DOMAIN`) → `Endpoints.swift:6-7` | `alt-tab.app` → `https://alt-tab.app/appcast.xml` | **C** — fork's domain, OR repoint feed at fork's GitHub-hosted appcast. |
 | 8 | **API domain (license + feedback)** | `config/base.xcconfig:21` (`API_DOMAIN`) → `Endpoints.swift:5,11-12` | `alt-tab.app/api` → `https://alt-tab.app/api/v1/license`, `.../v1/feedback` | **R** — license API is paywall; remove with `src/pro`. Feedback endpoint must be repointed or removed. |
-| 9 | **Appcast download URL** | `update_appcast.sh:18` | `https://github.com/lwouis/alt-tab-macos/releases/download/v<v>/...` | **C** — fork's GitHub releases URL (`KofTwentyTwo/alt-tab-free`). |
+| 9 | **Appcast download URL** | `update_appcast.sh:18` | `https://github.com/lwouis/alt-tab-macos/releases/download/v<v>/...` | **C** — fork's GitHub releases URL (`KofTwentyTwo/CommandTabFree`). |
 | 10 | **Appcast release-notes link** | `update_appcast.sh:16`; existing items in `appcast.xml` | `https://alt-tab.app/changelog-bare` | **C/R** — fork URL or drop the link. |
 | 11 | **License tier cookie** | `src/pro/license/LicenseCookie.swift` | cookie on `alt-tab.app` | **R** — remove with paywall. |
 | 12 | **Website dispatch repo + token** | `update_website.sh:5`; `ci_cd.yml:69` | `lwouis/alt-tab-website` + `$WEBSITE_DISPATCH_TOKEN` | **R/C** — fork has no upstream website; remove this CI step or repoint. |

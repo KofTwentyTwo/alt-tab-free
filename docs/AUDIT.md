@@ -10,7 +10,7 @@
 
 ## 1. What this project is, and the licensing position
 
-**alt-tab-free** ([github.com/KofTwentyTwo/alt-tab-free](https://github.com/KofTwentyTwo/alt-tab-free)) is a re-host of the popular open-source macOS window switcher **AltTab** ([github.com/lwouis/alt-tab-macos](https://github.com/lwouis/alt-tab-macos)). It is a pure Swift 5.8 AppKit application — no SwiftUI, no Interface Builder (per [`AGENTS.md`](../AGENTS.md)).
+**alt-tab-free** ([github.com/KofTwentyTwo/CommandTabFree](https://github.com/KofTwentyTwo/CommandTabFree)) is a re-host of the popular open-source macOS window switcher **AltTab** ([github.com/lwouis/alt-tab-macos](https://github.com/lwouis/alt-tab-macos)). It is a pure Swift 5.8 AppKit application — no SwiftUI, no Interface Builder (per [`AGENTS.md`](../AGENTS.md)).
 
 ### It is not a diverged fork — it is upstream + a paywall commit
 

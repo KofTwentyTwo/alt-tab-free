@@ -38,7 +38,7 @@ The complete corresponding source for every released binary is this repository a
 matching release tag:
 
 ```
-https://github.com/KofTwentyTwo/alt-tab-free
+https://github.com/KofTwentyTwo/CommandTabFree
 ```
 
 For a given release `vX.Y.Z`, the source is the repository tree at that tag, including
@@ -56,7 +56,5 @@ deliberately not conveyed; GPL-3.0 does not require these to be distributed.
 <div align="center">
 
 CommandTabFree is a free, GPL-3.0 fork of <a href="https://github.com/lwouis/alt-tab-macos">AltTab</a> by Louis Pontoise.
-
-<a href="https://jb.gg/OpenSource"><img src="docs/readme/sponsor.svg" alt="Sponsored by JetBrains" width="900"/></a>
 
 </div>

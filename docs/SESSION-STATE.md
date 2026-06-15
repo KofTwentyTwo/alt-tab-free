@@ -3,7 +3,7 @@
 _Updated 2026-06-15. `master` now carries the fork (merged + pushed). Public pre-release **v100.0.3** live; Homebrew tap live._
 
 ## What this is
-`KofTwentyTwo/alt-tab-free` is a fork of **AltTab** (`lwouis/alt-tab-macos`, GPL-3.0) that neutralizes the v11 Pro paywall so all features are free, rebranded **CommandTabFree**. Strategy: thin, merge-stable patch tracking upstream forever (`docs/PLAN-maintained-fork.md`).
+`KofTwentyTwo/CommandTabFree` is a fork of **AltTab** (`lwouis/alt-tab-macos`, GPL-3.0) that neutralizes the v11 Pro paywall so all features are free, rebranded **CommandTabFree**. Strategy: thin, merge-stable patch tracking upstream forever (`docs/PLAN-maintained-fork.md`).
 
 ## ✅ DONE
 - De-paywall + anti-relock tests + frozen identity (`com.koftwentytwo.commandtabfree`) + brand sweep + ⌘⇥ icon (final) — all on **`master`** (was `depaywall-free`, fast-forward merged, HEAD `c7d2d968`, pushed to origin; source is public for GPL §6).

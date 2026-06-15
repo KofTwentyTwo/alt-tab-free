@@ -30,7 +30,7 @@ modified. All paths are relative to the repo root unless noted.
   `semantic-release-bot`; there are **no fork-specific commits**. The entire paywall was
   introduced **upstream** by lwouis in a single commit, `9147a4a8 "feat: introducing
   alt-tab pro!"` (v11.0.0, 2026-04-05). The "alt-tab-free" repo has only re-hosted the
-  code under `KofTwentyTwo/alt-tab-free` — **no code-level rebrand has happened yet**:
+  code under `KofTwentyTwo/CommandTabFree` — **no code-level rebrand has happened yet**:
   bundle id, app name, domain, GitHub URL, and SUPublicEDKey are all still the upstream
   `com.lwouis.alt-tab-macos` / `alt-tab.app` / `lwouis/alt-tab-macos` values.
 
@@ -242,7 +242,7 @@ git log --oneline -- src/pro     # only 3 commits ever touch src/pro
 git log --oneline --diff-filter=A -- src/pro | tail -5   # src/pro first appears in 9147a4a8
 git log -40 --format='%an' | sort | uniq -c              # 34 lwouis, 6 semantic-release-bot
 git rev-list --count HEAD        # 1850 commits total
-git remote -v                    # origin = github.com:KofTwentyTwo/alt-tab-free.git
+git remote -v                    # origin = github.com:KofTwentyTwo/CommandTabFree.git
 ```
 
 Findings:
@@ -257,7 +257,7 @@ Findings:
   fixes after the pro launch (`f3fe535a`, `cddc89dd`, `e0b1778d`, etc.) — is `lwouis`.
   There are **zero commits by KofTwentyTwo / the current owner**. The "alt-tab-free" repo
   is a mirror of upstream `lwouis/alt-tab-macos` re-hosted under a new origin
-  (`git@github.com:KofTwentyTwo/alt-tab-free.git`), with the codebase otherwise unchanged.
+  (`git@github.com:KofTwentyTwo/CommandTabFree.git`), with the codebase otherwise unchanged.
   The README still markets it as "AltTab Pro" and links `https://alt-tab.app/`
   (`README.md:1`).
 
