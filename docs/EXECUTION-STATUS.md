@@ -199,7 +199,7 @@ per-component owner actions gathered from the scaffolding agents merged in.
       sync that changes the fork's modification surface. **Note:** `NOTICE.md` lists
       "App.handleCustomUrl (activate disabled)" as a change — the §2 Edit-2 neutralization HAS landed
       (`App.swift:474`), so that line is accurate; if you ever opt NOT to neutralize it, remove that line.
-- [~] **App icon — placeholder DONE, real artwork TODO** — ⌘⇥ glyph shipped for app + menu bar (NOT lwouis's mark); replace with final artwork before a notarized public release.
+- [x] **App icon DONE (owner-approved 2026-06-15)** — the ⌘⇥ glyph (app + menu bar) is the chosen mark, not lwouis's mark. No replacement planned.
 - [ ] **Add `config/local.xcconfig` and `package.json` to the PLAN §6.2 "keep ours" recurring-conflict
       set** so a future merge can't re-introduce upstream identity or the MIT license string.
 
