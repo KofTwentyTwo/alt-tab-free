@@ -228,9 +228,12 @@ per-component owner actions gathered from the scaffolding agents merged in.
       notarization/Gatekeeper. Also re-sign the vendored Sparkle helpers under the SAME Developer ID
       (PLAN §3.3 / §4.6) or notarization rejects. (This is also what makes the default `ai/build.sh`
       stop failing on the missing `Local Self-Signed` cert.)
-- [ ] **Generate a FRESH Sparkle EdDSA keypair:** paste the PUBLIC key into `Info.plist:66`
-      (replace `REPLACE_WITH_FORK_SUPUBLIC_EDKEY`); store the PRIVATE key as the CI secret
-      `SPARKLE_ED_PRIVATE_KEY`. The placeholder is NOT lwouis's key and will verify nothing.
+- [x] **Sparkle EdDSA keypair generated (2026-06-15).** PUBLIC key wired into `Info.plist`
+      (`SUPublicEDKey`); PRIVATE key stored in 1Password "CommandTabFree-Sparkle-EdDSA" + GitHub
+      Actions secret `SPARKLE_ED_PRIVATE_KEY` (env `production`); keychain account `commandtabfree`.
+      `SUEnableAutomaticChecks` set false until DOMAIN serves a real appcast.
+      **TODO at CI-wiring time:** `update_appcast.sh` still calls the deprecated `sign_update -s` —
+      switch it to `--ed-key-file` (or `--account commandtabfree`); the `-s` path rejects this key format.
 
 ### 3.4 GitHub Actions secrets + Environment (BLOCKING for release)
 
