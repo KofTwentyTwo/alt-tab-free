@@ -43,11 +43,13 @@ DOMAIN = fork.invalid
 API_DOMAIN = fork.invalid/api
 
 // --- Code signing (overrides release.xcconfig :5) ---
-// TODO: fork Developer ID — set to the fork's own signing identity, e.g.
-//       CODE_SIGN_IDENTITY = Developer ID Application: <Fork Org> (TEAMID)
-//       Required for notarization/Gatekeeper. Also re-sign vendored Sparkle helpers
-//       under this same Developer ID (§3.3 / §4.6) or notarization rejects.
-// CODE_SIGN_IDENTITY = Developer ID Application: <Fork Org> (TEAMID)
+// Fork Developer ID — signed, notarizable builds (PLAN §3.3 / §4.6). Set 2026-06-16.
+// The vendored Sparkle helpers (vendor/Sparkle/Helpers/*) are re-signed under this SAME
+// identity (a committed change) — required or notarization rejects the nested code.
+// Manual style + TEAM_ID so the headless CI runner signs without an Xcode-managed account.
+CODE_SIGN_IDENTITY = Developer ID Application: James Maes (2X834TJ5MA)
+CODE_SIGN_STYLE = Manual
+TEAM_ID = 2X834TJ5MA
 
 // --- Telemetry off (overrides base.xcconfig; AppCenter no-ops on empty secret) ---
 // Intentionally empty: telemetry is disabled (reinforced by Edit 3, §2).

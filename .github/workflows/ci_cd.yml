@@ -30,6 +30,9 @@ env:
   APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
   APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
   APPLE_P12_CERTIFICATE: ${{ secrets.APPLE_P12_CERTIFICATE }}
+  # alt-tab-free [depaywall]: optional .p12 export password (empty if exported password-less).
+  # Not part of the release-gate AND — the cert import tolerates an empty password.
+  APPLE_P12_PASSWORD: ${{ secrets.APPLE_P12_PASSWORD }}
   SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
   GITHUB_EVENT_BEFORE: ${{ github.event.before }}
   GITHUB_EVENT_AFTER: ${{ github.event.after }}
