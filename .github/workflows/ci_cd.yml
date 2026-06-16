@@ -134,12 +134,30 @@ jobs:
       # meaningless and can mis-bump, so gate to push (PLAN §4.2).
       - run: scripts/determine_next_version.sh
         if: github.event_name == 'push'
-      - run: scripts/replace_environment_variables_in_app.sh
+      # alt-tab-free [depaywall]: decouple the release apparatus from "every signing-ready push".
+      # determine_next_version.sh writes an EMPTY VERSION.txt when no commit since the last tag is
+      # release-worthy (semantic-release dry-run finds no bump). Gate the sign/notarize/release steps
+      # on this so a docs/ci/chore push still runs guards + commitlint + run_tests (Release-config
+      # compile check) but does NOT sign-build, notarize, or cut a release — no [skip ci] needed (§4.3).
+      - name: release-decision — did semantic-release compute a version?
+        id: release-decision
         if: github.event_name == 'push'
+        run: |
+          if [ -n "$(tr -d '[:space:]' < "$VERSION_FILE" 2>/dev/null)" ]; then
+            echo "will-release=true" >> "$GITHUB_OUTPUT"
+            echo "Release-worthy: semantic-release will cut v$(cat "$VERSION_FILE")."
+          else
+            echo "will-release=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No release-worthy commit — build/test only; notarize+release tail skipped."
+          fi
+      # Inject the release version only when releasing; an empty CURRENT_PROJECT_VERSION would crash
+      # App.version (see config/local.xcconfig). Non-release builds use the committed 0.0.0 default.
+      - run: scripts/replace_environment_variables_in_app.sh
+        if: github.event_name == 'push' && steps.release-decision.outputs.will-release == 'true'
       # codesign needs APPLE_P12_CERTIFICATE — gated on signing-ready so a not-yet-provisioned fork
       # does not RED on the missing-cert import (PLAN §3.3/§4.3).
       - run: scripts/codesign/setup_ci_master.sh
-        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true' && steps.release-decision.outputs.will-release == 'true'
       # Guard A — the anti-relock unit test (appended to LicenseManagerTests.swift). Runs on both
       # push and PR (no secrets needed); on the push path it sits before the sign/tag steps below
       # so a relock fails BEFORE any irreversible side-effect (PLAN §4.4). This is what keeps push
@@ -152,7 +170,7 @@ jobs:
       # prove the tree compiles without a cert. When the owner adds the secrets AND sets the fork's
       # Developer ID in config/local.xcconfig, this builds signed for the release tail (PLAN §3.3/§4.3).
       - name: build app (signed — owner cert provisioned)
-        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true' && steps.release-decision.outputs.will-release == 'true'
         run: scripts/build_app.sh
       - name: build app (ad-hoc — until signing-provisioned)
         if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready != 'true'
@@ -160,24 +178,24 @@ jobs:
       # --- Release tail: requires the owner's Apple Developer ID + Sparkle secrets. Skipped cleanly
       # (NOT failed) when they are absent, so push CI stays GREEN until the owner provisions them. ---
       - run: scripts/package_and_notarize_release.sh
-        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true' && steps.release-decision.outputs.will-release == 'true'
       # alt-tab-free [depaywall]: upload_symbols_to_appcenter.sh REMOVED — telemetry is off (PLAN §3.4).
       - run: scripts/update_appcast.sh
-        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true' && steps.release-decision.outputs.will-release == 'true'
       # alt-tab-free [depaywall]: update_readme_and_website.sh REMOVED — it queried the UPSTREAM
       # lwouis/alt-tab-macos GitHub API for stars/downloads and rewrote docs/contributors.md from the
       # UPSTREAM contributor graph (semantic mismatch for the fork) and dispatched the lwouis website.
       # Cosmetic only; dropped per PLAN §4.0/§4.3 (alongside update_website.sh, already removed).
       - run: npx semantic-release
-        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true' && steps.release-decision.outputs.will-release == 'true'
       - id: set_release_info
         run: scripts/extract_latest_changelog.sh
-        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true' && steps.release-decision.outputs.will-release == 'true'
       # alt-tab-free [depaywall]: belt-and-suspenders copy of Guard B + Guard C immediately before the
       # release is created. The load-bearing copy is at the top of the job (pre-tag-push); this second
       # copy guards the gh-release object itself (PLAN §4.4).
       - name: anti-relock + anti-conflict re-check (belt-and-suspenders)
-        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true' && steps.release-decision.outputs.will-release == 'true'
         run: |
           grep -q 'depaywall' src/pro/license/LicenseManager.swift \
             || { echo "PAYWALL RELOCKED: depaywall marker missing from computeState()"; exit 1; }
@@ -190,7 +208,7 @@ jobs:
       # (release.config.js has no @semantic-release/github plugin, so softprops is the sole release
       # creator — PLAN §4.3). repository defaults to ${{ github.repository }} = the fork.
       - uses: softprops/action-gh-release@v3
-        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true' && steps.release-decision.outputs.will-release == 'true'
         with:
           repository: ${{ github.repository }}
           token: ${{ secrets.GITHUB_TOKEN }}
