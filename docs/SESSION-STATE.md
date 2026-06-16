@@ -12,7 +12,7 @@ Two fixes landed this session:
 
 **Owner-gated next steps (NOT automatable; details in EXECUTION-STATUS §3.3–3.5 + CICD-STATUS.md bucket C):** Apple Developer ID → `APPLE_P12_CERTIFICATE`/`APPLE_ID`/`APPLE_PASSWORD`/`APPLE_TEAM_ID` in the `production` env (unblocks signed+notarized releases) **and** set `CODE_SIGN_IDENTITY` in `config/local.xcconfig`; real `DOMAIN`/appcast host to replace `fork.invalid`; `SYNC_BOT_TOKEN` (auto upstream-sync PRs); external cron for `upstream_sync.yml`. The 3 sync labels (`sync`/`conflict`/`chokepoint-refresh`) were created this session. Already set: `SPARKLE_ED_PRIVATE_KEY` + `production` env + Sparkle public key in Info.plist.
 
-**Repo facts:** GitHub = `KofTwentyTwo/CommandTabFree` (renamed from alt-tab-free; local dir is still `~/Git.Local/kof22/alt-tab-free`, SSH remote points at CommandTabFree). Latest release v100.0.3 (zip + dmg). ⌘⇥ app/menu-bar icon is FINAL (owner-approved). master HEAD `6070f0cb`, working tree clean.
+**Repo facts:** GitHub = `KofTwentyTwo/CommandTabFree` (renamed from alt-tab-free; local dir is still `~/Git.Local/kof22/alt-tab-free`, SSH remote points at CommandTabFree). Latest release v100.0.3 (zip + dmg). ⌘⇥ app/menu-bar icon is FINAL (owner-approved). master tip is green (functional fixes `d1e1b296` + `6070f0cb`; docs/labels/TODO commits sit on top), working tree clean. Owner-gated checklist: `docs/TODO.md`.
 
 
 ## What this is
