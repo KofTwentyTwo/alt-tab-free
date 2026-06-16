@@ -1,3 +1,16 @@
+# [100.1.0](https://github.com/KofTwentyTwo/CommandTabFree/compare/v100.0.3...v100.1.0) (2026-06-16)
+
+
+### Bug Fixes
+
+* **ci:** build ad-hoc until Apple cert provisioned ([6070f0c](https://github.com/KofTwentyTwo/CommandTabFree/commit/6070f0c))
+* **l10n:** regenerate base Localizable.strings from source ([d1e1b29](https://github.com/KofTwentyTwo/CommandTabFree/commit/d1e1b29))
+
+
+### Features
+
+* **release:** sign + notarize with fork Developer ID ([2f9fac1](https://github.com/KofTwentyTwo/CommandTabFree/commit/2f9fac1))
+
 # [11.3.0](https://github.com/lwouis/alt-tab-macos/compare/v11.2.0...v11.3.0) (2026-06-04)
 
 
