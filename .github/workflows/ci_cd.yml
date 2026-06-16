@@ -142,10 +142,18 @@ jobs:
       # so a relock fails BEFORE any irreversible side-effect (PLAN §4.4). This is what keeps push
       # CI GREEN today on the signing-unprovisioned fork.
       - run: scripts/run_tests.sh
-      # build_app.sh needs no secrets (builds unsigned/ad-hoc when CODE_SIGN_IDENTITY is unset), so
-      # it runs on every push to prove the tree compiles — independent of the release gate.
-      - run: scripts/build_app.sh
-        if: github.event_name == 'push'
+      # alt-tab-free [depaywall]: build the Release product to prove the tree compiles. The fork
+      # inherits upstream's Developer ID via config/release.xcconfig (CODE_SIGN_IDENTITY), which is
+      # absent on CI until the owner provisions the Apple cert — so when the release gate is NOT
+      # signing-ready we build AD-HOC (CODE_SIGN_IDENTITY=-, signing not required, no timestamp) to
+      # prove the tree compiles without a cert. When the owner adds the secrets AND sets the fork's
+      # Developer ID in config/local.xcconfig, this builds signed for the release tail (PLAN §3.3/§4.3).
+      - name: build app (signed — owner cert provisioned)
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready == 'true'
+        run: scripts/build_app.sh
+      - name: build app (ad-hoc — until signing-provisioned)
+        if: github.event_name == 'push' && steps.release-gate.outputs.signing-ready != 'true'
+        run: scripts/build_app.sh CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=NO OTHER_CODE_SIGN_FLAGS=--timestamp=none
       # --- Release tail: requires the owner's Apple Developer ID + Sparkle secrets. Skipped cleanly
       # (NOT failed) when they are absent, so push CI stays GREEN until the owner provisions them. ---
       - run: scripts/package_and_notarize_release.sh
