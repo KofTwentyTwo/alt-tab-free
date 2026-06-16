@@ -1,7 +1,7 @@
 # CI/CD readiness — CommandTabFree (fork of lwouis/alt-tab-macos)
 
 **Date:** 2026-06-16  **Branch:** `master`  **Repo:** `KofTwentyTwo/CommandTabFree` (public)
-**Status:** push CI verified **fully green** on the real runner (run `27634828800`, commit `6070f0cb`).
+**Status:** full release pipeline **proven** on the real runner — signed + notarized **v100.1.0** released (run `27643432063`, Developer ID `James Maes (2X834TJ5MA)`, `spctl`-accepted + stapled). Non-release pushes stay green via the ad-hoc build path (run `27634828800`).
 **Authoritative design:** `docs/PLAN-maintained-fork.md` §4; owner checklist `docs/EXECUTION-STATUS.md` §3.4/§3.5.
 
 This is the state after the CI-fix pass. The pass applied only **safe, owner-secret-independent**
@@ -57,7 +57,7 @@ Environment.
 | Code-sign keychain import | `APPLE_P12_CERTIFICATE` | `setup_ci_master.sh` |
 | Notarize + staple | `APPLE_ID` + `APPLE_PASSWORD` + `APPLE_TEAM_ID` | `package_and_notarize_release.sh` |
 | Sparkle appcast sign + publish to gh-pages | `SPARKLE_ED_PRIVATE_KEY` (+ a real `DOMAIN`/feed host) | `update_appcast.sh` (now `--ed-key-file -`) |
-| Tag push + GitHub Release | ambient `GITHUB_TOKEN` (auto) — only gated alongside the above so a release isn't cut unsigned | `npx semantic-release`, `softprops/action-gh-release`, `.fork-sync-state` advance |
+| Tag push + GitHub Release | ambient `GITHUB_TOKEN` (auto) — only gated alongside the above so a release isn't cut unsigned | `npx semantic-release`, `softprops/action-gh-release` (the release-tail `.fork-sync-state` advance step was **REMOVED** 2026-06-16 — it clobbered the upstream-sync cursor with the fork release tag; the cursor must be advanced by the sync-merge flow instead — see `ci_cd.yml`) |
 | Sync PR fires `guard.yml`/`ci_cd.yml` PR checks | `SYNC_BOT_TOKEN` (GitHub App token or fork PAT — NOT default `GITHUB_TOKEN`) | `upstream_sync.yml` (fail-closed if missing) |
 
 > The release tail is **all-or-nothing**: it requires the full Apple set **and** the Sparkle key
